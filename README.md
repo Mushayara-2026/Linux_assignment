@@ -78,59 +78,170 @@ ls -lR /home/ec2-user/webapp/
 
 <img width="443" height="229" alt="image" src="https://github.com/user-attachments/assets/8bfd6563-374a-46dc-a19c-ea7ee1214244" />
 
-# Question 2: DevOps Automation Script
+# Question 2: Write an Interactive Log Script
 
 ## 🎯 Objective
-Write a shell script that uses the directory structure created in **Question 1** to automate tasks such as logging, configuration reading, and script execution.
+Using the `webapp/` structure from Question 1, create a bash script that:
+- Prompts the user for input
+- Reads a configuration file
+- Writes timestamped log entries  
+
+The log entries generated here will be used as input for **Question 3**.
+
+## 🛠 Steps
+
+1. **Navigate into the scripts directory**
+
+**Command :**
+
+   cd /home/ec2-user/webapp/scripts/
+   vim log_user.sh
+   
+<img width="375" height="25" alt="image" src="https://github.com/user-attachments/assets/632da32a-fbf7-4b79-a96c-1cebd0be5453" />
+
+**2. Press i to enter insert mode and add the following content:**
+
+#!/bin/bash
+
+**# Prompt user for name**
+
+read -p "Enter your name: " username
+
+**# Display config file**
+
+cat /home/ec2-user/webapp/config/app.conf
+
+**# Append log entry with timestamp**
+
+echo "Login: $username Date: $(date)" >> /home/ec2-user/webapp/logs/app.log
+
+**# Show full log file**
+
+cat /home/ec2-user/webapp/logs/app.log
+
+Press Esc, then type :wq to save and quit
+
+<img width="424" height="161" alt="image" src="https://github.com/user-attachments/assets/ce65d181-9729-44b1-a841-9f7a3b5b1a95" />
+
+**3.Give execute permission**
+
+**Command :**
+
+chmod +x log_user.sh
+
+<img width="404" height="35" alt="image" src="https://github.com/user-attachments/assets/020bbbc0-9147-4e2f-9e41-a03565b45969" />
+
+**4.Run the script three times with different names**
+
+**Command :**
+
+./log_user.sh
+
+<img width="389" height="218" alt="image" src="https://github.com/user-attachments/assets/b2954637-2768-477e-8b9b-e80002023784" />
+
+**5.Check the log file**
+
+**Command :**
+
+cat /home/ec2-user/webapp/logs/app.log
+
+<img width="515" height="53" alt="image" src="https://github.com/user-attachments/assets/ae6e821c-fb6a-49bc-81d9-0f3658443f4b" />
+
+# Question 3: User Management and File Permission Control
+
+## 🎯 Objective
+Create 4 Linux users.  
+- **devuser1** and **devuser2** → write access to `log_user.sh`  
+- **devuser3** and **devuser4** → read-only access  
+
+Use Linux groups and file permissions (`chmod`) to enforce this.
 
 ---
 
 ## 🛠 Steps
 
-1. **Create a new script file**
-   ```bash
-   sudo nano /home/ec2-user/webapp/scripts/run.sh
+1. **Create the writers group**
 
-<img width="375" height="25" alt="image" src="https://github.com/user-attachments/assets/632da32a-fbf7-4b79-a96c-1cebd0be5453" />
+**Command :**
 
-2. #!/bin/bash
+sudo groupadd writers
 
-# Load configuration
-source /home/ec2-user/webapp/config/app.conf
+sudo useradd -m devuser1
 
-# Log start
-echo "$(date): Starting $APP_NAME on port $PORT" >> /home/ec2-user/webapp/logs/app.log
+sudo useradd -m devuser2
 
-# Example action (replace with real app logic)
-echo "Running $APP_NAME..."
-sleep 2
+sudo useradd -m devuser3
 
-# Log completion
-echo "$(date): $APP_NAME stopped" >> /home/ec2-user/webapp/logs/app.log
+sudo useradd -m devuser4
 
+<img width="433" height="65" alt="image" src="https://github.com/user-attachments/assets/4bf7a6be-cf0f-4b88-b4c6-193f6960382c" />
 
-<img width="424" height="161" alt="image" src="https://github.com/user-attachments/assets/ce65d181-9729-44b1-a841-9f7a3b5b1a95" />
+**2. Add devuser1 and devuser2 to writers group and Change group ownership of the script log_user.sh from root to writers**
 
-Make script executable
+**Command :**
 
-chmod +x /home/ec2-user/webapp/scripts/run.sh
+sudo usermod -aG writers devuser1 && sudo usermod -aG writers devuser2
 
+sudo chown root:writers /home/ec2-user/webapp/scripts/log_user.sh
 
-<img width="404" height="35" alt="image" src="https://github.com/user-attachments/assets/020bbbc0-9147-4e2f-9e41-a03565b45969" />
+<img width="680" height="26" alt="image" src="https://github.com/user-attachments/assets/567aefff-fa81-4171-965b-eb8ea97e5d6d" />
 
+**3. Set permissions of the script log_user.sh to 664 and verify the permission set for log_user.sh**
 
-Run the script
+**Command :**
 
-/home/ec2-user/webapp/scripts/run.sh
+sudo chmod 664 /home/ec2-user/webapp/scripts/log_user.sh
 
-<img width="389" height="218" alt="image" src="https://github.com/user-attachments/assets/b2954637-2768-477e-8b9b-e80002023784" />
+ls -l /home/ec2-user/webapp/scripts/log_user.sh
 
-Check logs
+Owner (root) → read & write
 
-cat /home/ec2-user/webapp/logs/app.log
+Group (writers(devuser1, devuser2)) → read & write
+
+Others (devuser3, devuser4) → read only
 
 
-<img width="515" height="53" alt="image" src="https://github.com/user-attachments/assets/ae6e821c-fb6a-49bc-81d9-0f3658443f4b" />
+<img width="601" height="40" alt="image" src="https://github.com/user-attachments/assets/6799b347-68d5-4814-b18d-f36b34935272" />
+
+✅ Test Access
+
+**4. Write access (devuser1/devuser2):**
+
+**Command :**
+
+su - devuser1
+
+echo "# devuser1 test" >> /home/ec2-user/webapp/scripts/log_user.sh
+
+
+
+<img width="479" height="295" alt="image" src="https://github.com/user-attachments/assets/ea7ed070-fff8-4b86-a9a6-ca9a245230a0" />
+
+<img width="428" height="202" alt="image" src="https://github.com/user-attachments/assets/29335dd3-25d3-4b32-b531-eea2c9c617e4" />
+
+
+**5. Read-only access (devuser3/devuser4):**
+
+**Command :**
+
+su - devuser3
+
+cat /home/ec2-user/webapp/scripts/log_user.sh
+
+<img width="487" height="266" alt="image" src="https://github.com/user-attachments/assets/06085d1c-098d-4ad9-b535-c610c3faf61d" />
+
+<img width="449" height="243" alt="image" src="https://github.com/user-attachments/assets/4b7dfca0-2c5c-43b1-a706-c3c129c61818" />
+
+**(Permission denied since only read access provided for devuser3 and devuser4)**
+
+echo "# devuser3 test" >> /home/ec2-user/webapp/scripts/log_user.sh
+
+<img width="461" height="39" alt="image" src="https://github.com/user-attachments/assets/b2b40239-bc81-40f2-ada7-55280905620c" />
+
+
+
+
+
 
 
 
